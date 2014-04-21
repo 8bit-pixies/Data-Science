@@ -1,0 +1,1 @@
+[Think Stats](http://www.greenteapress.com/thinkstats/html/index.html)
