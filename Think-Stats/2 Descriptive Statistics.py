@@ -107,10 +107,41 @@
 # 
 #     
 #     
-#     hist = {}
+#     h = {}
 #     for x in t:
-#         hist[x] = hist.get(x, 0) + 1
+#         h[x] = h.get(x, 0) + 1
 #     
+
+# <codecell>
+
+# an example, using the book
+t = [1,1,1,2,2,3,3,3,3,4,4]
+hist = {}
+for x in t:
+    hist[x] = hist.get(x,0) + 1
+
+hist
+
+# <codecell>
+
+%matplotlib inline
+import pylab as pl
+import numpy as np
+
+pl.bar(hist.keys(), hist.values())
+pl.show()
+
+# <codecell>
+
+# plotting using pyplot
+
+import matplotlib.pyplot as plt
+
+plt.hist(t)
+plt.show()
+
+# <markdowncell>
+
 # 
 # The result is a dictionary that maps from values to frequencies. To get from
 # frequencies to probabilities, we divide through by _n_, which is called
@@ -127,6 +158,30 @@
 # mass function”; that is, it’s a function that maps from values to
 # probabilities (I’ll explain “mass” in Section
 # [6.3](thinkstats007.html#density)).
+# 
+
+# <codecell>
+
+n = float(len(t))
+pmf = {}
+for x, freq in hist.items():
+    pmf[x] = freq / n
+
+pmf
+
+# <codecell>
+
+pl.bar(pmf.keys(), pmf.values())
+pl.show()
+
+# <codecell>
+
+plt.hist(t, normed = True) # not the "probability norm"
+plt.show()
+
+# <markdowncell>
+
+# 
 # 
 # It might be confusing to call a Python dictionary a function. In mathematics,
 # a function is a map from one set of values to another. In Python, we _usually_
@@ -197,13 +252,15 @@
 #          print val, freq
 #     
 # 
-# **Exercise 3**  _ The mode of a distribution is the most frequent value (see `http://wikipedia.org/wiki/Mode_(statistics)`). Write a function called `Mode` that takes a Hist object and returns the most frequent value._
+# **Exercise 3**  The mode of a distribution is the most frequent value (see `http://wikipedia.org/wiki/Mode_(statistics)`). Write a function called `Mode` that takes a Hist object and returns the most frequent value.
 # 
-# _As a more challenging version, write a function called `AllModes` that takes
+# As a more challenging version, write a function called `AllModes` that takes
 # a Hist object and returns a list of value-frequency pairs in descending order
 # of frequency. Hint: the `operator` module provides a function called
-# `itemgetter` which you can pass as a key to `sorted`._
-# 
+# `itemgetter` which you can pass as a key to `sorted`.
+
+# <markdowncell>
+
 # ## 2.5  Plotting histograms
 # 
 # There are a number of Python packages for making figures and graphs. The one I
@@ -242,21 +299,9 @@
 # Either way, you can find the documentation for `pyplot` on the web.
 # 
 # Figure 2.1 shows histograms of pregnancy lengths for first babies and others.
-# 
-# > * * *
-# 
-# >
-# 
-# > ![](thinkstats001.png)
-# 
-# >
-# 
-# > Figure 2.1: Histogram of pregnancy lengths.
-# 
-# >
-# 
-# > * * *
-# 
+
+# <markdowncell>
+
 # Histograms are useful because they make the following features immediately
 # apparent:
 # 
@@ -344,45 +389,32 @@
 # Pmf objects provide a `Copy` method so you can make and modify a copy without
 # affecting the original.
 # 
-# **Exercise 4**  _ According to Wikipedia, “Survival analysis is a branch of statistics which deals with death in biological organisms and failure in mechanical systems;” see `http://wikipedia.org/wiki/Survival_analysis`. _
+# **Exercise 4**   According to Wikipedia, "Survival analysis is a branch of statistics which deals with death in biological organisms and failure in mechanical systems;" see `http://wikipedia.org/wiki/Survival_analysis`. 
 # 
-# _As part of survival analysis, it is often useful to compute the remaining
+# As part of survival analysis, it is often useful to compute the remaining
 # lifetime of, for example, a mechanical component. If we know the distribution
 # of lifetimes and the age of the component, we can compute the distribution of
-# remaining lifetimes._
+# remaining lifetimes.
 # 
-# _Write a function called `RemainingLifetime` that takes a Pmf of lifetimes and
+# Write a function called `RemainingLifetime` that takes a Pmf of lifetimes and
 # an age, and returns a new Pmf that represents the distribution of remaining
-# lifetimes._
+# lifetimes.
 # 
-# **Exercise 5**    _ In Section 2.1 we computed the mean of a sample by adding up the elements and dividing by _n_. If you are given a PMF, you can still compute the mean, but the process is slightly different: _
+# **Exercise 5**  In Section 2.1 we computed the mean of a sample by adding up the elements and dividing by \\(n\\). If you are given a PMF, you can still compute the mean, but the process is slightly different: 
 # 
-# _µ = _
+# $$\mu = \sum_i p_i x_i$$
 # 
+# where the \\(x_i\\) are the unique values in the PMF and _pi_=PMF(_xi_).
+# Similarly, you can compute variance like this: 
 # 
+# $$\sigma^2 = \sum_i p_i(x_i - \mu)^2$$
 # 
-# _∑_
-# 
-# __i__
-# 
-# _ _pi_ _xi_ _
-# 
-# _ where the _xi_ are the unique values in the PMF and _pi_=PMF(_xi_).
-# Similarly, you can compute variance like this: _
-# 
-# _σ2 = _
-# 
-# 
-# 
-# _∑_
-# 
-# __i__
-# 
-# _ _pi_ (_xi_ − µ)2_
-# 
-# _ Write functions called `PmfMean` and `PmfVar` that take a Pmf object and
+# Write functions called `PmfMean` and `PmfVar` that take a Pmf object and
 # compute the mean and variance. To test these methods, check that they are
-# consistent with the methods `Mean` and `Var` in `Pmf.py`. _
+# consistent with the methods `Mean` and `Var` in `Pmf.py`. 
+
+# <markdowncell>
+
 # 
 # ## 2.7  Plotting PMFs
 # 
@@ -391,19 +423,61 @@
 #   * To plot a Pmf as a bar graph, you can use `pyplot.bar` or `myplot.Hist`. Bar graphs are most useful if the number of values in the Pmf is small. 
 #   * To plot a Pmf as a line, you can use `pyplot.plot` or `myplot.Pmf`. Line plots are most useful if there are a large number of values and the Pmf is smooth. 
 # 
-# > * * *
+
+# <codecell>
+
+import pandas as pd
+import numpy as np
+import gzip
+
+def makeRecord(line, fields):
+    obs = {}
+    for (field, start, end, cast) in fields:
+        try:
+            s = line[start-1:end]
+            val = cast(s)
+        except ValueError:
+            val = np.nan #make use of numpy's nan
+        obs[field]=val
+    return obs
+
+fresp = gzip.open('./data/2002FemResp.dat.gz')
+resp_fields = [
+            ('caseid', 1, 12, int),
+            ]
+
+fpreg = gzip.open('./data/2002FemPreg.dat.gz')
+preg_fields = [  ('caseid', 1, 12, int),
+            ('nbrnaliv', 22, 22, int),
+            ('babysex', 56, 56, int),
+            ('birthwgt_lb', 57, 58, int),
+            ('birthwgt_oz', 59, 60, int),
+            ('prglength', 275, 276, int),
+            ('outcome', 277, 277, int),
+            ('birthord', 278, 279, int),
+            ('agepreg', 284, 287, int),
+            ('finalwgt', 423, 440, float)]
+
+respondents = pd.DataFrame([makeRecord(line, resp_fields) for line in fresp])
+pregnancies = pd.DataFrame([makeRecord(line, preg_fields) for line in fpreg])
+
+#recode
+pregnancies['agepreg'] = pregnancies.agepreg/100.0
+pregnancies['totalwgt_oz'] = pregnancies.birthwgt_lb * 16 + pregnancies.birthwgt_oz
+
+
+# <codecell>
+
+# add column if they are first born
+pregnancies['first_born'] = pregnancies.birthord == 1
+
+# display this histogram: not the same as what is in thinkstats, but the easiest solution to get 
+# something similiar
+pregnancies.groupby('first_born')['prglength'].hist()
+
+# <markdowncell>
+
 # 
-# >
-# 
-# > ![](thinkstats002.png)
-# 
-# >
-# 
-# > Figure 2.2: PMF of pregnancy lengths.
-# 
-# >
-# 
-# > * * *
 # 
 # Figure 2.2 shows the PMF of pregnancy lengths as a bar graph. Using the PMF,
 # we can see more clearly where the distributions differ. First babies seem to
@@ -461,20 +535,13 @@
 # 
 # Figure 2.3 shows the difference between the PMFs for weeks 35–45. I multiplied
 # by 100 to express the differences in percentage points.
-# 
-# > * * *
-# 
-# >
-# 
-# > ![](thinkstats003.png)
-# 
-# >
-# 
-# > Figure 2.3: Difference in percentage, by week.
-# 
-# >
-# 
-# > * * *
+
+# <codecell>
+
+pregnancies.groupby('first_born')['prglength'].hist(normed=True) # not the canonical norm!
+
+# <markdowncell>
+
 # 
 # This figure makes the pattern clearer: first babies are less likely to be born
 # in week 39, and somewhat more likely to be born in weeks 41 and 42.
@@ -487,20 +554,20 @@
 # born during Week 41 or later. Ranges like these that are used to group data
 # are called **bins**.
 # 
-# **Exercise 6**  _ Create a file named `risk.py`. Write functions named `ProbEarly`, `ProbOnTime` and `ProbLate` that take a PMF and compute the fraction of births that fall into each bin. Hint: write a generalized function that these functions call._
+# **Exercise 6**  Create a file named `risk.py`. Write functions named `ProbEarly`, `ProbOnTime` and `ProbLate` that take a PMF and compute the fraction of births that fall into each bin. Hint: write a generalized function that these functions call.
 # 
-# _Make three PMFs, one for first babies, one for others, and one for all live
+# Make three PMFs, one for first babies, one for others, and one for all live
 # births. For each PMF, compute the probability of being born early, on time, or
-# late._
+# late.
 # 
-# _One way to summarize data like this is with **relative risk**, which is a
+# One way to summarize data like this is with **relative risk**, which is a
 # ratio of two probabilities. For example, the probability that a first baby is
 # born early is 18.2%. For other babies it is 16.8%, so the relative risk is
-# 1.08. That means that first babies are about 8% more likely to be early._
+# 1.08. That means that first babies are about 8% more likely to be early.
 # 
-# _Write code to confirm that result, then compute the relative risks of being
+# Write code to confirm that result, then compute the relative risks of being
 # born on time and being late. You can download a solution from
-# `http://thinkstats.com/risk.py`._
+# `http://thinkstats.com/risk.py`.
 # 
 # ## 2.11  Conditional probability
 # 
@@ -523,14 +590,14 @@
 # alternative is to remove from the distribution the values less than 39 and
 # then renormalize.
 # 
-# **Exercise 7**  _ Write a function that implements either of these algorithms and computes the probability that a baby will be born during Week 39, given that it was not born prior to Week 39._
+# **Exercise 7**   Write a function that implements either of these algorithms and computes the probability that a baby will be born during Week 39, given that it was not born prior to Week 39.
 # 
-# _Generalize the function to compute the probability that a baby will be born
-# during Week _x_, given that it was not born prior to Week _x_, for all _x_.
-# Plot this value as a function of _x_ for first babies and others._
+# Generalize the function to compute the probability that a baby will be born
+# during Week \\(x\\), given that it was not born prior to Week \\(x\\), for all \\(x\\).
+# Plot this value as a function of \\(x\\) for first babies and others.
 # 
-# _You can download a solution to this problem from
-# `http://thinkstats.com/conditional.py`. _
+# You can download a solution to this problem from
+# `http://thinkstats.com/conditional.py`. 
 # 
 # ## 2.12  Reporting results
 # 
@@ -551,54 +618,51 @@
 # to reassure a patient, you might choose statistics that put the differences in
 # context.
 # 
-# **Exercise 8**  _ Based on the results from the previous exercises, suppose you were asked to summarize what you learned about whether first babies arrive late._
+# **Exercise 8**   Based on the results from the previous exercises, suppose you were asked to summarize what you learned about whether first babies arrive late.
 # 
-# _Which summary statistics would you use if you wanted to get a story on the
+# Which summary statistics would you use if you wanted to get a story on the
 # evening news? Which ones would you use if you wanted to reassure an anxious
-# patient? _
+# patient? 
 # 
-# _Finally, imagine that you are Cecil Adams, author of _The Straight Dope_
-# (`http://straightdope.com`), and your job is to answer the question, “Do first
-# babies arrive late?” Write a paragraph that uses the results in this chapter
-# to answer the question clearly, precisely, and accurately._
+# Finally, imagine that you are Cecil Adams, author of [The Straight Dope](http://straightdope.com), 
+# and your job is to answer the question, "Do first
+# babies arrive late?" Write a paragraph that uses the results in this chapter
+# to answer the question clearly, precisely, and accurately.
 # 
 # ## 2.13  Glossary
 # 
-# **central tendency:**
-#      A characteristic of a sample or population; intuitively, it is the most average value. 
-# **spread:**
-#      A characteristic of a sample or population; intuitively, it describes how much variability there is. 
-# **variance:**
-#      A summary statistic often used to quantify spread. 
-# **standard deviation:**
-#      The square root of variance, also used as a measure of spread. 
-# **frequency:**
-#      The number of times a value appears in a sample. 
-# **histogram:**
-#      A mapping from values to frequencies, or a graph that shows this mapping. 
-# **probability:**
-#      A frequency expressed as a fraction of the sample size. 
-# **normalization:**
-#      The process of dividing a frequency by a sample size to get a probability. 
-# **distribution:**
-#      A summary of the values that appear in a sample and the frequency, or probability, of each. 
-# **PMF:**
-#      Probability mass function: a representation of a distribution as a function that maps from values to probabilities. 
-# **mode:**
-#      The most frequent value in a sample. 
-# **outlier:**
-#      A value far from the central tendency. 
-# **trim:**
-#      To remove outliers from a dataset. 
-# **bin:**
-#      A range used to group nearby values. 
-# **relative risk:**
-#      A ratio of two probabilities, often used to measure a difference between distributions. 
-# **conditional probability:**
-#      A probability computed under the assumption that some condition holds. 
-# **clinically significant:**
-#      A result, like a difference between groups, that is relevant in practice. 
-
-# <codecell>
-
+# **central tendency:**  
+#      A characteristic of a sample or population; intuitively, it is the most average value.   
+# **spread:**  
+#      A characteristic of a sample or population; intuitively, it describes how much variability there is.   
+# **variance:**  
+#      A summary statistic often used to quantify spread.   
+# **standard deviation:**  
+#      The square root of variance, also used as a measure of spread.   
+# **frequency:**  
+#      The number of times a value appears in a sample.   
+# **histogram:**  
+#      A mapping from values to frequencies, or a graph that shows this mapping.   
+# **probability:**  
+#      A frequency expressed as a fraction of the sample size.   
+# **normalization:**  
+#      The process of dividing a frequency by a sample size to get a probability.   
+# **distribution:**  
+#      A summary of the values that appear in a sample and the frequency, or probability, of each.   
+# **PMF:**  
+#      Probability mass function: a representation of a distribution as a function that maps from values to probabilities.   
+# **mode:**  
+#      The most frequent value in a sample.   
+# **outlier:**  
+#      A value far from the central tendency.   
+# **trim:**  
+#      To remove outliers from a dataset.   
+# **bin:**  
+#      A range used to group nearby values.   
+# **relative risk:**  
+#      A ratio of two probabilities, often used to measure a difference between distributions.   
+# **conditional probability:**  
+#      A probability computed under the assumption that some condition holds.   
+# **clinically significant:**  
+#      A result, like a difference between groups, that is relevant in practice.   
 
