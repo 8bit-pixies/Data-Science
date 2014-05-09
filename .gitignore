@@ -216,5 +216,5 @@ pip-log.txt
 
 *.bat
 Think-Stats/_scratch
-Think-Stats/data/*.dat
+Think-Stats/data/2002FemResp*
 Think-Stats/data/*.py
