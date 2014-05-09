@@ -215,6 +215,7 @@ pip-log.txt
 .mr.developer.cfg
 
 *.bat
+Think-Stats/.ipynb*
 Think-Stats/_scratch
 Think-Stats/data/2002FemResp*
 Think-Stats/data/*.py
