@@ -83,50 +83,7 @@ pd.DataFrame(exp_cdf(X,2), X).plot()
 
 # <codecell>
 
-raw_data = """    0005       1    3837       5
-    0104       1    3334      64
-    0118       2    3554      78
-    0155       2    3838     115
-    0257       2    3625     177
-    0405       1    2208     245
-    0407       1    1745     247
-    0422       2    2846     262
-    0431       2    3166     271
-    0708       2    3520     428
-    0735       2    3380     455
-    0812       2    3294     492
-    0814       1    2576     494
-    0909       1    3208     549
-    1035       2    3521     635
-    1049       1    3746     649
-    1053       1    3523     653
-    1133       2    2902     693
-    1209       2    2635     729
-    1256       2    3920     776
-    1305       2    3690     785
-    1406       1    3430     846
-    1407       1    3480     847
-    1433       1    3116     873
-    1446       1    3428     886
-    1514       2    3783     914
-    1631       2    3345     991
-    1657       2    3034    1017
-    1742       1    2184    1062
-    1807       2    3300    1087
-    1825       1    2383    1105
-    1854       2    3428    1134
-    1909       2    4162    1149
-    1947       2    3630    1187
-    1949       2    3406    1189
-    1951       2    3402    1191
-    2010       1    3500    1210
-    2037       2    3736    1237
-    2051       2    3370    1251
-    2104       2    2121    1264
-    2123       2    3150    1283
-    2217       1    3866    1337
-    2327       1    3542    1407
-    2355       1    3278    1435"""
+raw_data = open("data/babyboom.txt", 'r').read()
 
 # cleaning and creating a dataframe off this data
 
@@ -296,23 +253,92 @@ print "Tallest person is %.2f m" % (max(X)/100.0)
 
 # <codecell>
 
+# we shall use Holy Bible KJV as our corpus.
+
+import re
+
+bible = "data/HolyBible-KJV.txt"
+dat = open(bible).read().lower()
+
+dat = re.sub(r"[^a-z' ]", ' ', dat)
+dat = re.sub(r"'", '', dat) #remove apostrophe 's
+dat = re.sub(r'\s+', ' ', dat)
+
+wordfreq = {}
+
+for word in dat.split():
+    if len(word) < 3: continue
+    wordfreq[word] = wordfreq.get(word, 0) + 1
+
+wordf = wordfreq.values()
+
+# <codecell>
+
+# then use the wordfreq.values() to plot histogram and estimate alpha
+# using MLE estimator for xm and alpha we get:
+
+xm = min(wordf)
+n = len(wordf)
+a = float(n)/sum(np.log(wordf) - np.log(xm))
+
+# <codecell>
+
+# plot CCDF
+X = sorted(wordf)
+plt.step(X[::-1], np.linspace(0,1, len(X)), label='post')
+plt.xscale('log')
+plt.show()
 
 # <markdowncell>
 
 # **Exercise 6**   
 # 
-# _The Weibull distribution is a generalization of the exponential distribution
+# The Weibull distribution is a generalization of the exponential distribution
 # that comes up in failure analysis (see
-# `http://wikipedia.org/wiki/Weibull_distribution`). Its CDF is _
+# http://wikipedia.org/wiki/Weibull_distribution). Its CDF is 
 # 
-# __CDF_(_x_) = 1 − _e_−(_x_ / λ)_k_ _
+# $$ CDF(x) = 1 − e^{(x/\lambda)k} $$
 # 
-# _ Can you find a transformation that makes a Weibull distribution look like a
-# straight line? What do the slope and intercept of the line indicate? _
+# Can you find a transformation that makes a Weibull distribution look like a
+# straight line? What do the slope and intercept of the line indicate? 
 # 
-# _Use `random.weibullvariate` to generate a sample from a Weibull distribution
-# and use it to test your transformation._
+# Use `random.weibullvariate` to generate a sample from a Weibull distribution
+# and use it to test your transformation.
 # 
+
+# <codecell>
+
+shape = 2
+scale = 1 # scale doesn't matter for the transformation
+
+t = [random.weibullvariate(scale, shape) for x in range(100000)]
+plt.hist(t, bins=100)
+plt.show()
+
+# <codecell>
+
+def transform(x, k):
+    """
+    In order to create a straight line, consider that to generate a weibull variate, the transformation would be:
+    (this is the quantile or inverse cumulative distribution)
+    
+    X = scale * (-log(U))^(1/shape)
+    
+    where U ~ Uniform(0,1)
+    
+    rearranging and considering that scale only makes the range greater or smaller (i.e. has no effect whether the line is "straight"
+    or not) you can see that the tranformation is:
+    
+    U is proportional to exp(x^shape)
+    """    
+    return np.exp(-x**k)
+
+tt=[transform(x, shape) for x in t]
+plt.hist(tt,bins=100)
+plt.show()
+
+# <markdowncell>
+
 # ## 4.3  The normal distribution
 # 
 # The normal distribution, also called Gaussian, is the most commonly used
@@ -324,124 +350,95 @@ print "Tallest person is %.2f m" % (max(X)/100.0)
 # analysis, but the CDF is not one of them. Unlike the other distributions we
 # have looked at, there is no closed-form expression for the normal CDF; the
 # most common alternative is to write it in terms of the **error function**,
-# which is a special function written erf(_x_):
+# which is a special function written erf(\\(x\\)):
 # 
-# _CDF_(_x_) =
+# $$  CFD(x) = \frac{1}{2} \left[ 1+ erf\left( \frac{x-\mu}{\sigma\sqrt{2}}\right) \right]   $$
 # 
-# 1
-# 
-# 2
-# 
-# 
-# 
-# ⎡  
-# ⎢  
-# ⎢  
-# ⎢  
-# ⎢  
-# ⎣
-# 
-# 1 + _erf_
-# 
-# ⎛  
-# ⎜  
-# ⎜  
-# ⎜  
-# ⎜  
-# ⎝
-# 
-# _x_ − µ
-# 
-# σ
-# 
-# √
-# 
-# 2
-# 
-# 
-# 
-# ⎞  
-# ⎟  
-# ⎟  
-# ⎟  
-# ⎟  
-# ⎠
-# 
-# ⎤  
-# ⎥  
-# ⎥  
-# ⎥  
-# ⎥  
-# ⎦
-# 
-# _erf_(_x_) =
-# 
-# 2
-# 
-# √
-# 
-# π
-# 
-# 
-# 
-# ∫
-# 
-# _x_
-# 
-#   
-#   
-# 
-# 0
-# 
-#  _e_−_t_2 _dt_
-# 
-# The parameters µ and σ determine the mean and standard deviation of the
+# The parameters \\(\mu\\) and \\(\sigma\\) determine the mean and standard deviation of the
 # distribution.
 # 
 # If these formulas make your eyes hurt, don’t worry; they are easy to implement
-# in Python2. There are many fast and accurate ways to approximate erf(_x_). You
+# in Python2. There are many fast and accurate ways to approximate erf(\\(x\\)). You
 # can download one of them from `http://thinkstats.com/erf.py`, which provides
 # functions named `erf` and `NormalCdf`.
 # 
-# Figure 4.5 shows the CDF of the normal distribution with parameters µ = 2.0
-# and σ = 0.5. The sigmoid shape of this curve is a recognizable characteristic
+# Figure 4.5 shows the CDF of the normal distribution with parameters \\(\mu = 2.0\\)
+# and \\(\sigma = 0.5 \\). The sigmoid shape of this curve is a recognizable characteristic
 # of a normal distribution.
 # 
-# > * * *
-# 
-# >
-# 
-# > ![](thinkstats011.png)
-# 
-# >
-# 
-# > Figure 4.5: CDF of a normal distribution.
-# 
-# >
-# 
-# > * * *
+
+# <codecell>
+
+from scipy.stats import norm
+
+X = np.linspace(0.0,4.0, 100000)
+t = norm.cdf(X, 2.0, 0.5)
+pd.DataFrame(t, X).plot()
+
+# <markdowncell>
+
 # 
 # In the previous chapter we looked at the distribution of birth weights in the
 # NSFG. Figure 4.6 shows the empirical CDF of weights for all live births and
 # the CDF of a normal distribution with the same mean and variance.
-# 
-# > * * *
-# 
-# >
-# 
-# > ![](thinkstats012.png)
-# 
-# >
-# 
-# > Figure 4.6: CDF of birth weights with a normal model.
-# 
-# >
-# 
-# > * * *
+
+# <codecell>
+
+import gzip
+
+def makeRecord(line, fields):
+    obs = {}
+    for (field, start, end, cast) in fields:
+        try:
+            s = line[start-1:end]
+            val = cast(s)
+        except ValueError:
+            val = np.nan #make use of numpy's nan
+        obs[field]=val
+    return obs
+
+fresp = gzip.open('./data/2002FemResp.dat.gz')
+resp_fields = [
+            ('caseid', 1, 12, int),
+            ]
+
+fpreg = gzip.open('./data/2002FemPreg.dat.gz')
+preg_fields = [  ('caseid', 1, 12, int),
+            ('nbrnaliv', 22, 22, int),
+            ('babysex', 56, 56, int),
+            ('birthwgt_lb', 57, 58, int),
+            ('birthwgt_oz', 59, 60, int),
+            ('prglength', 275, 276, int),
+            ('outcome', 277, 277, int),
+            ('birthord', 278, 279, int),
+            ('agepreg', 284, 287, int),
+            ('finalwgt', 423, 440, float)]
+
+respondents = pd.DataFrame([makeRecord(line, resp_fields) for line in fresp])
+pregnancies = pd.DataFrame([makeRecord(line, preg_fields) for line in fpreg])
+
+#recode
+pregnancies['agepreg'] = pregnancies.agepreg/100.0
+pregnancies['totalwgt_oz'] = pregnancies.birthwgt_lb * 16 + pregnancies.birthwgt_oz
+
+# <codecell>
+
+tot = [x for x in pregnancies['totalwgt_oz'] if not np.isnan(x) and x < 250]
+tot = sorted(tot)
+
+X = np.linspace(0.0, 250.0, len(tot))
+Y = norm.cdf(X, np.mean(tot), np.std(tot))
+
+plt.step(tot, np.linspace(0,1, len(tot)), label='post')
+plt.plot(X, Y)
+plt.show()
+
+# <markdowncell>
+
 # 
 # The normal distribution is a good model for this dataset. A **model** is a
 # useful simplification. In this case it is useful because we can summarize the
-# entire distribution with just two numbers, µ = 116.5 and σ = 19.9, and the
+# entire distribution with just two numbers, \\(\mu\\) = 116.5 and \\(\sigma\\) = 19.9, and the
 # resulting error (difference between the model and the data) is small.
 # 
 # Below the 10th percentile there is a discrepancy between the data and the
@@ -450,23 +447,61 @@ print "Tallest person is %.2f m" % (max(X)/100.0)
 # important to get this part of the distribution right, so it might not be
 # appropriate to use the normal model.
 # 
-# **Exercise 7**  _ The Wechsler Adult Intelligence Scale is a test that is intended to measure intelligence3. Results are transformed so that the distribution of scores in the general population is normal with µ = 100 and σ = 15. _
+# **Exercise 7**  The Wechsler Adult Intelligence Scale is a test that is intended to measure intelligence3. Results are transformed so that the distribution of scores in the general population is normal with µ = 100 and σ = 15. 
 # 
-# _Use `erf.NormalCdf` to investigate the frequency of rare events in a normal
+# Use `erf.NormalCdf` to investigate the frequency of rare events in a normal
 # distribution. What fraction of the population has an IQ greater than the mean?
-# What fraction is over 115? 130? 145?_
+# What fraction is over 115? 130? 145?
 # 
-# _A “six-sigma” event is a value that exceeds the mean by 6 standard
+# A “six-sigma” event is a value that exceeds the mean by 6 standard
 # deviations, so a six-sigma IQ is 190. In a world of 6 billion people, how many
-# do we expect to have an IQ of 190 or more4? _
+# do we expect to have an IQ of 190 or more4? 
+
+# <codecell>
+
+def px_over(iq):
+    return 1-norm.cdf(iq, 100, 15)
+
+print "IQ greater than 115: %.2f" % px_over(115)
+print "IQ greater than 130: %.2f" % px_over(130)
+print "IQ greater than 145: %.2f" % px_over(145)
+
+# <codecell>
+
+print "approximately %.0f people have an IQ 190 or greater " % (6000000000*(1-norm.cdf(190, 100, 15)))
+
+# <markdowncell>
+
 # 
-# **Exercise 8**  _ Plot the CDF of pregnancy lengths for all live births. Does it look like a normal distribution? _
+# **Exercise 8**  Plot the CDF of pregnancy lengths for all live births. Does it look like a normal distribution? 
 # 
-# _Compute the mean and standard deviation of the sample and plot the normal
+# Compute the mean and standard deviation of the sample and plot the normal
 # distribution with the same parameters. Is the normal distribution a good model
 # for this data? If you had to summarize this distribution with two statistics,
-# what statistics would you choose?_
+# what statistics would you choose?
 # 
+
+# <codecell>
+
+tot = [x for x in pregnancies['prglength'] if not np.isnan(x)]
+
+tot = sorted(tot)
+
+X = np.linspace(0.0, 50.0, len(tot))
+Y = norm.cdf(X, np.mean(tot), np.std(tot))
+
+plt.step(tot, np.linspace(0,1, len(tot)), label='post')
+plt.plot(X, Y)
+plt.show()
+
+# <codecell>
+
+plt.hist(tot)
+
+# probably the two most frequent groupings of time since it is bimodal?
+
+# <markdowncell>
+
 # ## 4.4  Normal probability plot
 # 
 # For the exponential, Pareto and Weibull distributions, there are simple
@@ -475,55 +510,69 @@ print "Tallest person is %.2f m" % (max(X)/100.0)
 # 
 # For the normal distribution there is no such transformation, but there is an
 # alternative called a **normal probability plot**. It is based on **rankits**:
-# if you generate _n_ values from a normal distribution and sort them, the _k_th
-# rankit is the mean of the distribution for the _k_th value.
+# if you generate \\(n\\) values from a normal distribution and sort them, the \\(k\\)th
+# rankit is the mean of the distribution for the \\(k\\)th value.
 # 
-# **Exercise 9**  _ Write a function called `Sample` that generates 6 samples from a normal distribution with µ = 0 and σ = 1. Sort and return the values._
+# **Exercise 9**   Write a function called `Sample` that generates 6 samples from a normal distribution with \\(\mu = 0\\) and \\(\sigma = 1\\). Sort and return the values.
 # 
-# _Write a function called `Samples` that calls `Sample` 1000 times and returns
-# a list of 1000 lists._
+# Write a function called `Samples` that calls `Sample` 1000 times and returns
+# a list of 1000 lists.
 # 
-# _If you apply `zip` to this list of lists, the result is 6 lists with 1000
+# If you apply `zip` to this list of lists, the result is 6 lists with 1000
 # values in each. Compute the mean of each of these lists and print the results.
-# I predict that you will get something like this:_
+# I predict that you will get something like this:
 # 
-# _{−1.2672, −0.6418, −0.2016, 0.2016, 0.6418, 1.2672}_
+# $${−1.2672, −0.6418, −0.2016, 0.2016, 0.6418, 1.2672}$$
 # 
-# _If you increase the number of times you call `Sample`, the results should
-# converge on these values._
+# If you increase the number of times you call `Sample`, the results should
+# converge on these values.
 # 
+
+# <codecell>
+
+def sample():
+    sample = np.random.normal(size=6)
+    sample = sorted(sample)
+    return sample
+
+def samples():
+    return [sample() for x in range(1000)]
+
+[np.mean(x) for x in zip(*samples())]
+
+# <markdowncell>
+
 # Computing rankits exactly is moderately difficult, but there are numerical
 # methods for approximating them. And there is a quick-and-dirty method that is
 # even easier to implement:
 # 
-#   1. From a normal distribution with µ = 0 and σ = 1, generate a sample with the same size as your dataset and sort it.
+#   1. From a normal distribution with \\(\mu = 0\\) and \\(\sigma = 1\\), generate a sample with the same size as your dataset and sort it.
 #   2. Sort the values in the dataset.
 #   3. Plot the sorted values from your dataset versus the random values.
 # 
 # For large datasets, this method works well. For smaller datasets, you can
-# improve it by generating _m_(_n_+1) − 1 values from a normal distribution,
-# where _n_ is the size of the dataset and _m_ is a multiplier. Then select
-# every _m_th element, starting with the _m_th.
+# improve it by generating \\(m(n+1) − 1\\) values from a normal distribution,
+# where \\(n\\) is the size of the dataset and \\(m\\) is a multiplier. Then select
+# every \\(m\\)th element, starting with the \\(m\\)th.
 # 
 # This method works with other distributions as well, as long as you know how to
 # generate a random sample.
 # 
 # Figure 4.7 is a quick-and-dirty normal probability plot for the birth weight
 # data.
-# 
-# > * * *
-# 
-# >
-# 
-# > ![](thinkstats013.png)
-# 
-# >
-# 
-# > Figure 4.7: Normal probability plot of birth weights.
-# 
-# >
-# 
-# > * * *
+
+# <codecell>
+
+tot = [x for x in pregnancies['totalwgt_oz'] if not np.isnan(x) and x < 250]
+tot = sorted(tot)
+
+Y = np.random.normal(size=len(tot))
+Y = sorted(Y)
+plt.scatter(tot,Y, s=.2)
+plt.show()
+
+# <markdowncell>
+
 # 
 # The curvature in this plot suggests that there are deviations from a normal
 # distribution; nevertheless, it is a good (enough) model for many purposes.
