@@ -42,6 +42,7 @@
 %matplotlib inline
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 # plot the exponential distribution
 def exp_cdf(x,l):
@@ -58,7 +59,7 @@ pd.DataFrame(exp_cdf(X,2), X).plot()
 # 
 # To see an example of a distribution that is approximately exponential, we will
 # look at the interarrival time of babies. On December 18, 1997, 44 babies were
-# born in a hospital in Brisbane, Australia1. The times of birth for all 44
+# born in a hospital in Brisbane, Australia(This example is based on information and data from Dunn, “A Simple Dataset for Demonstrating Common Distributions,” Journal of Statistics Education v.7, n.3 (1999)). The times of birth for all 44
 # babies were reported in the local paper; you can download the data from
 # `http://thinkstats.com/babyboom.dat`.
 # 
@@ -94,8 +95,6 @@ babyboom = pd.DataFrame([[int(y) for y in x.strip().split()] for x in raw_data.s
 # sex: 1 for girl, 2 for boy
 
 # <codecell>
-
-import matplotlib.pyplot as plt
 
 # plot of time between births
 X = sorted(babyboom['Mins after Midnight']-babyboom['Mins after Midnight'].shift(1))[1:]
@@ -358,7 +357,7 @@ plt.show()
 # distribution.
 # 
 # If these formulas make your eyes hurt, don’t worry; they are easy to implement
-# in Python2. There are many fast and accurate ways to approximate erf(\\(x\\)). You
+# in Python. There are many fast and accurate ways to approximate erf(\\(x\\)). You
 # can download one of them from `http://thinkstats.com/erf.py`, which provides
 # functions named `erf` and `NormalCdf`.
 # 
@@ -447,7 +446,7 @@ plt.show()
 # important to get this part of the distribution right, so it might not be
 # appropriate to use the normal model.
 # 
-# **Exercise 7**  The Wechsler Adult Intelligence Scale is a test that is intended to measure intelligence3. Results are transformed so that the distribution of scores in the general population is normal with µ = 100 and σ = 15. 
+# **Exercise 7**  The Wechsler Adult Intelligence Scale is a test that is intended to measure intelligence. Results are transformed so that the distribution of scores in the general population is normal with µ = 100 and σ = 15. 
 # 
 # Use `erf.NormalCdf` to investigate the frequency of rare events in a normal
 # distribution. What fraction of the population has an IQ greater than the mean?
@@ -455,7 +454,7 @@ plt.show()
 # 
 # A “six-sigma” event is a value that exceeds the mean by 6 standard
 # deviations, so a six-sigma IQ is 190. In a world of 6 billion people, how many
-# do we expect to have an IQ of 190 or more4? 
+# do we expect to have an IQ of 190 or [more](http://wikipedia.org/wiki/Christopher_Langan)? 
 
 # <codecell>
 
@@ -582,43 +581,88 @@ plt.show()
 # _Use the running speeds from `relay.py` to generate a normal probability plot.
 # Is the normal distribution a good model for this data? You can download a
 # solution from `http://thinkstats.com/relay_normal.py`._
+
+# <codecell>
+
+# generate a sequence of values
+gen_seq = np.random.normal(size=1000)
+gen_seq = sorted(gen_seq)
+
+#create plot...
+Y = np.random.random(size=len(gen_seq))
+Y = sorted(Y)
+plt.scatter(gen_seq, Y, s=.2)
+plt.show()
+
+# <markdowncell>
+
 # 
 # ## 4.5  The lognormal distribution
 # 
 # If the logarithms of a set of values have a normal distribution, the values
 # have a **lognormal** distribution. The CDF of the lognormal distribution is
-# the same as the CDF of the normal distribution, with log _x_ substituted for
-# _x_.
+# the same as the CDF of the normal distribution, with \\(log(x)\\) substituted for
+# \\(x\\).
 # 
-#    CDF_lognormal_(_x_) = CDF_normal_(log _x_)
+# $$ CDF_{lognormal}(x) = CDF_{normal}(x) $$
 # 
-# The parameters of the lognormal distribution are usually denoted µ and σ. But
+# The parameters of the lognormal distribution are usually denoted \\(\mu\\) and \\(\sigma\\). But
 # remember that these parameters are _not_ the mean and standard deviation; the
-# mean of a lognormal distribution is exp(µ + σ2/2) and the standard deviation
-# is ugly5.
+# mean of a lognormal distribution is \\(e^{\mu + \frac{\sigma^s}{2}}\\) and the standard deviation
+# is [ugly](http://wikipedia.org/wiki/Log-normal_distribution).
 # 
-# It turns out that the distribution of weights for adults is approximately
-# lognormal6.
+# It turns out that the distribution of [weights for adults is approximately
+# lognormal](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1636707).
 # 
 # The National Center for Chronic Disease Prevention and Health Promotion
 # conducts an annual survey as part of the Behavioral Risk Factor Surveillance
-# System (BRFSS)7. In 2008, they interviewed 414,509 respondents and asked about
+# System (BRFSS)(Centers for Disease Control and Prevention (CDC). Behavioral Risk Factor Surveillance System Survey Data. Atlanta, Georgia: U.S. Department of Health and Human Services, Centers for Disease Control and Prevention, 2008.). In 2008, they interviewed 414,509 respondents and asked about
 # their demographics, health and health risks.
-# 
-# > * * *
-# 
-# >
-# 
-# > ![](thinkstats014.png)
-# 
-# >
-# 
-# > Figure 4.8: CDF of adult weights (log transform).
-# 
-# >
-# 
-# > * * *
-# 
+
+# <codecell>
+
+adult_weight = gzip.open('./data/CDBRFS08.ASC.gz')
+aw_fields = [('age', 101, 102, int),
+            ('weight2', 119, 122, int),
+            ('wtyrago', 127, 130, int),
+            ('wtkg2', 1254, 1258, int),
+            ('htm3', 1251, 1253, int),
+            ('sex', 143, 143, int),]
+
+aw_data = pd.DataFrame([makeRecord(line, aw_fields) for line in adult_weight])
+
+# <codecell>
+
+# recode and cleanse data
+
+def CleanWeight(weight):
+    if weight in [7777, 9999]:
+        return 'NA'
+    elif weight < 1000:
+        return weight / 2.2
+    elif 9000 < weight < 9999:
+        return weight - 9000
+    else:
+        return weight
+
+aw_data['wtkg2'] = aw_data['wtkg2'].apply(lambda x: np.nan if x in ['NA', 99999] else x/100.0)
+aw_data['weight2'] = aw_data['weight2'].apply(CleanWeight)
+aw_data['wtyrago'] = aw_data['wtyrago'].apply(CleanWeight)
+aw_data['htm3'] = aw_data['htm3'].apply(lambda x: np.nan if x == 999 else x)
+aw_data['age'] = aw_data['age'].apply(lambda x: np.nan if x in [7,9] else x)
+
+# <codecell>
+
+weights = np.log(sorted([x for x in aw_data['weight2'] if x != 'NA' and not np.isnan(x)]))
+X = np.linspace(min(weights), max(weights), len(weights))
+Y = norm.cdf(X, np.mean(weights), np.std(weights))
+
+plt.step(weights, np.linspace(0,1, len(weights)), label='post')
+plt.plot(X,Y)
+plt.show()
+
+# <markdowncell>
+
 # Among the data they collected are the weights in kilograms of 398,484
 # respondents. Figure 4.8 shows the distribution of log _w_, where _w_ is weight
 # in kilograms, along with a normal model.
@@ -628,42 +672,138 @@ plt.show()
 # Since the distribution of log _w_ fits a normal distribution, we conclude that
 # _w_ fits a lognormal distribution.
 # 
-# **Exercise 11**  _ Download the BRFSS data from `http://thinkstats.com/CDBRFS08.ASC.gz`, and my code for reading it from `http://thinkstats.com/brfss.py`. Run `brfss.py` and confirm that it prints summary statistics for a few of the variables. _
+# **Exercise 11**  Download the BRFSS data from http://thinkstats.com/CDBRFS08.ASC.gz, and my code for reading it from http://thinkstats.com/brfss.py. Run `brfss.py` and confirm that it prints summary statistics for a few of the variables. 
 # 
-# _Write a program that reads adult weights from the BRFSS and generates normal
-# probability plots for _w_ and log _w_. You can download a solution from
-# `http://thinkstats.com/brfss_figs.py`._
+# Write a program that reads adult weights from the BRFSS and generates normal
+# probability plots for \\(w\\) and \\(log(w)\\). You can download a solution from
+# http://thinkstats.com/brfss_figs.py.
+
+# <codecell>
+
+#create plot... (this is for log weight)
+Y = np.random.random(size=len(weights))
+Y = sorted(Y)
+plt.scatter(weights, Y, s=.2)
+plt.show()
+
+# <codecell>
+
+# for non-transformed weight
+weights = sorted([x for x in aw_data['weight2'] if x != 'NA' and not np.isnan(x)])
+Y = np.random.random(size=len(weights))
+Y = sorted(Y)
+plt.scatter(weights, Y, s=.2)
+plt.show()
+
+# <markdowncell>
+
 # 
-# **Exercise 12**  _ The distribution of populations for cities and towns has been proposed as an example of a real-world phenomenon that can be described with a Pareto distribution. _
+# **Exercise 12**  The distribution of populations for cities and towns has been proposed as an example of a real-world phenomenon that can be described with a Pareto distribution. 
 # 
-# _The U.S. Census Bureau publishes data on the population of every incorporated
+# The U.S. Census Bureau publishes data on the population of every incorporated
 # city and town in the United States. I have written a small program that
 # downloads this data and stores it in a file. You can download it from
-# `http://thinkstats.com/populations.py`. _
+# http://thinkstats.com/populations.py. 
 # 
-#   1. _Read over the program to make sure you know what it does; then run it to download and process the data._
-#   2. _Write a program that computes and plots the distribution of populations for the 14,593 cities and towns in the dataset._
-#   3. _Plot the CDF on linear and log-_x_ scales so you can get a sense of the shape of the distribution. Then plot the CCDF on a log-log scale to see if it has the characteristic shape of a Pareto distribution. _
-#   4. _Try out the other transformations and plots in this chapter to see if there is a better model for this data._
+# 1. _Read over the program to make sure you know what it does; then run it to download and process the data._
+# 2. _Write a program that computes and plots the distribution of populations for the 14,593 cities and towns in the dataset._
+# 3. _Plot the CDF on linear and \\(log(x)\\) scales so you can get a sense of the shape of the distribution. Then plot the CCDF on a log-log scale to see if it has the characteristic shape of a Pareto distribution. _
+# 4. _Try out the other transformations and plots in this chapter to see if there is a better model for this data._
 # 
-# _What conclusion do you draw about the distribution of sizes for cities and
+# What conclusion do you draw about the distribution of sizes for cities and
 # towns? You can download a solution from
-# `http://thinkstats.com/populations_cdf.py`. _
+# http://thinkstats.com/populations_cdf.py. 
+
+# <codecell>
+
+population = open('./data/populations.csv').readlines()
+#ignore empty lines
+
+title_ = "City"+population[3].strip()
+population = [x.strip() for x in population[4:-6]]
+
+# <codecell>
+
+pattern = r',(?=")|(?<=\w),(?=\w)|(?<="),(?=\w)'
+title = re.compile(pattern).split(title_)
+
+# <codecell>
+
+if re.compile(r'city|town', re.IGNORECASE).search('city'):
+    print 'yes'
+
+# <codecell>
+
+import re
+# remove all commas which are between two numbers
+
+def clean_string(s):
+    pattern = r'(?<=\d),(?=\d\d\d")'
+    s = re.sub(pattern, '', s)
+    s = re.sub(r'"', '', s)
+    return s.split(',')
+
+#population = pd.DataFrame([clean_string(x) for x in population], columns = title)    
+pop = [clean_string(x) for x in population]
+# remove any row in pop which doesn't have exactly 11 elements.
+pop = [x for x in pop if len(x) == 11 and re.compile(r'city|town', re.IGNORECASE).search(x[0])]
+popdf = pd.DataFrame(pop, columns = title)
+
+# <codecell>
+
+# there are entries which are not numbers, like "(X)"
+
+def to_int(x):
+    try:
+        return np.float32(x)
+    except:
+        return np.nan
+
+pop_census = []
+for x in popdf['Census']:
+    try: 
+        pop_census.append(float(x))
+    except:
+        pass
+        
+pop_census = sorted(pop_census)
+plt.step(pop_census, np.linspace(0,1, len(pop_census)), label='post')
+plt.show()
+
+# <codecell>
+
+# log transform
+plt.step(pop_census, np.linspace(0,1,len(pop_census)), label='post')
+plt.xscale('log')
+plt.show()
+
+# <codecell>
+
+# plot the CCDF (log-log)
+plt.step(pop_census[::-1], np.linspace(0,1,len(pop_census)), label='post')
+plt.xscale('log')
+plt.yscale('log')
+plt.show()
+
+# <markdowncell>
+
 # 
 # **Exercise 13**   
 # 
-# _The Internal Revenue Service of the United States (IRS) provides data about
-# income taxes at `http://irs.gov/taxstats`. _
+# The Internal Revenue Service of the United States (IRS) provides data about
+# income taxes at http://irs.gov/taxstats. 
 # 
-# _One of their files, containing information about individual incomes for 2008,
-# is available from `http://thinkstats.com/08in11si.csv`. I converted it to a
+# One of their files, containing information about individual incomes for 2008,
+# is available from http://thinkstats.com/08in11si.csv. I converted it to a
 # text format called CSV, which stands for “comma-separated values;” you can
-# read it using the `csv` module._
+# read it using the `csv` module.
 # 
-# _Extract the distribution of incomes from this dataset. Are any of the
+# Extract the distribution of incomes from this dataset. Are any of the
 # continuous distributions in this chapter a good model of the data? You can
-# download a solution from `http://thinkstats.com/irs.py`. _
-# 
+# download a solution from `http://thinkstats.com/irs.py`. 
+
+# <markdowncell>
+
 # ## 4.6  Why model?
 # 
 # At the beginning of this chapter I said that many real world phenomena can be
@@ -694,19 +834,17 @@ plt.show()
 # values with the appropriate distribution by choosing from a uniform
 # distribution from 0 to 1, then choosing
 # 
-#    _x_ = ICDF(_p_)
+# $$ x = ICDF(p) $$
 # 
 # For example, the CDF of the exponential distribution is
 # 
-# _p_ = 1 − _e_−λ _x_
+# $$ p = 1- e^{-\lambda x} $$
 # 
 # Solving for _x_ yields:
 # 
-#    _x_= −log (1 − _p_) / λ
+# $$x = -log(1-p)/\lambda $$
 # 
 # So in Python we can write
-# 
-#     
 #     
 #     def expovariate(lam):
 #         p = random.random()
@@ -715,56 +853,38 @@ plt.show()
 #     
 # 
 # I called the parameter `lam` because `lambda` is a Python keyword. Most
-# implementations of `random.random` can return 0 but not 1, so 1 − _p_ can be 1
-# but not 0, which is good, because log 0 is undefined.
+# implementations of `random.random` can return 0 but not 1, so \\(1-p\\) can be 1
+# but not 0, which is good, because \\(log(0)\\) is undefined.
 # 
-# **Exercise 14**  _ Write a function named `weibullvariate` that takes `lam` and `k` and returns a random value from the Weibull distribution with those parameters. _
-# 
-# ## 4.8  Glossary
-# 
-# **empirical distribution:**
-#      The distribution of values in a sample. 
-# **continuous distribution:**
-#      A distribution described by a continuous function. 
-# **interarrival time:**
-#      The elapsed time between two events. 
-# **error function:**
-#      A special mathematical function, so-named because it comes up in the study of measurement errors. 
-# **normal probability plot:**
-#      A plot of the sorted values in a sample versus the expected value for each if their distribution is normal. 
-# **rankit:**
-#      The expected value of an element in a sorted list of values from a normal distribution. 
-# **model:**
-#      A useful simplification. Continuous distributions are often good models of more complex empirical distributions. 
-# **corpus:**
-#      A body of text used as a sample of a language. 
-# **hapaxlegomenon:**
-#      A word that appears only once in a corpus. It appears twice in this book, so far. 
-# 
-# * * *
-# 
-# 1
-# 
-#     This example is based on information and data from Dunn, “A Simple Dataset for Demonstrating Common Distributions,” Journal of Statistics Education v.7, n.3 (1999). 
-# 2
-# 
-#     As of Python 3.2, it is even easier; `erf` is in the `math` module. 
-# 3
-# 
-#     Whether it does or not is a fascinating controversy that I invite you to investigate at your leisure. 
-# 4
-# 
-#     On this topic, you might be interested to read `http://wikipedia.org/wiki/Christopher_Langan`. 
-# 5
-# 
-#     See `http://wikipedia.org/wiki/Log-normal_distribution`. 
-# 6
-# 
-#     I was tipped off to this possibility by a comment (without citation) at `http://mathworld.wolfram.com/LogNormalDistribution.html`. Subsequently I found a paper that proposes the log transform and suggests a cause: Penman and Johnson, “The Changing Shape of the Body Mass Index Distribution Curve in the Population,” Preventing Chronic Disease, 2006 July; 3(3): A74. Online at `http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1636707`. 
-# 7
-# 
-#     Centers for Disease Control and Prevention (CDC). Behavioral Risk Factor Surveillance System Survey Data. Atlanta, Georgia: U.S. Department of Health and Human Services, Centers for Disease Control and Prevention, 2008. 
+# **Exercise 14**  Write a function named `weibullvariate` that takes `lam` and `k` and returns a random value from the Weibull distribution with those parameters.
 
 # <codecell>
 
+import math
+
+def weibullvariate(lam, k):
+    """the CDF for weibull is 1-e^{(-x/lambda)^k}, 
+    solving for p and rearrange..."""
+    p = random.random()
+    return ((-lam**k)*math.log(1-p))**(1/float(k))
+
+# <codecell>
+
+pd.DataFrame(sorted([weibullvariate(2,1) for _ in range(100)])).plot()
+
+# <markdowncell>
+
+# 
+# ## 4.8  Glossary
+# 
+# **empirical distribution:** The distribution of values in a sample.   
+# **continuous distribution:** A distribution described by a continuous function.   
+# **interarrival time:** The elapsed time between two events.   
+# **error function:** A special mathematical function, so-named because it comes up in the study of measurement errors.   
+# **normal probability plot:**  A plot of the sorted values in a sample versus the expected value for each if their distribution is normal.   
+# **rankit:** The expected value of an element in a sorted list of values from a normal distribution.    
+# **model:** A useful simplification. Continuous distributions are often good models of more complex empirical distributions.   
+# **corpus:**   A body of text used as a sample of a language.   
+# **hapaxlegomenon:** A word that appears only once in a corpus. It appears twice in this book, so far.   
+# 
 
